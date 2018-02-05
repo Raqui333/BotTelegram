@@ -15,30 +15,32 @@ getUpdate(){
 }
 
 sendMessage(){
-	curl -s "${BOT}/sendMessage?chat_id=${CHAT}" --data-urlencode "text=$1"
+	curl -s "${BOT}/sendMessage?chat_id=${CHAT}&parse_mode=Markdown" --data-urlencode "text=$1"
 }
 
 replyMessage(){
-	curl -s "${BOT}/sendMessage?chat_id=${CHAT}&reply_to_message_id=$2" --data-urlencode "text=$1"
+	curl -s "${BOT}/sendMessage?chat_id=${CHAT}&reply_to_message_id=$2&parse_mode=Markdown" --data-urlencode "text=$1"
 }
 
 MessageID="0"
 while true
 do
 	Update=$(getUpdate)
+	
 	LastMessageTEXT=$(echo $Update | jq -r '.result[-1].message.text')
 	LastMessageID=$(echo $Update | jq -r '.result[-1].message.message_id')
-	
-	if [[ $LastMessageTEXT = "/teste" && $LastMessageID != $MessageID ]]
+	LastMessageUSERNAME=$(echo $Update | jq -r '.result[-1].message.from.username')
+
+	if [[ $LastMessageTEXT =~ (/teste(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
-		replyMessage "isso é um teste" $MessageID &> /dev/null
+		replyMessage "isso é um teste, noob" $MessageID &> /dev/null
 	fi
 
-	if [[ $LastMessageTEXT =~ CM && $LastMessageID != $MessageID ]]
+	if [[ $LastMessageUSERNAME = "null"  && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
-		replyMessage "CMLixo" $MessageID &> /dev/null
+		replyMessage "Coloca um [username](tg://user?id=372539286) ai, noob" $MessageID &> /dev/null
 	fi
 
 	sleep 1
