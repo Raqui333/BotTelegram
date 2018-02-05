@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TOKEN="<TOKEN>"
-CHAT="<GROUP>"
+CHAT="<GROUP>" 
 BOT="https://api.telegram.org/bot${TOKEN}"
 
 getUpdate(){
