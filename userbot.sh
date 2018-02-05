@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOKEN="<TOKEN>"
+TOKEN="372539286:AAGWhvF-LMYWTCUz-hOBndm7257Cdd28Bbo"
 BOT="https://api.telegram.org/bot${TOKEN}"
 MessageID=0
 
@@ -15,11 +15,11 @@ getUpdate(){
 }
 
 sendMessage(){
-	curl -s "${BOT}/sendMessage?chat_id=$3&parse_mode=Markdown" --data-urlencode "text=$1" &> /dev/null
+	curl -s "${BOT}/sendMessage?chat_id=$3&parse_mode=Markdown" --data-urlencode "text=$(echo -e $1)" &> /dev/null
 }
 
 replyMessage(){
-	curl -s "${BOT}/sendMessage?chat_id=$3&reply_to_message_id=$2&parse_mode=Markdown" --data-urlencode "text=$1" &> /dev/null
+	curl -s "${BOT}/sendMessage?chat_id=$3&reply_to_message_id=$2&parse_mode=Markdown" --data-urlencode "text=$(echo -e $1)" &> /dev/null
 }
 
 getInfo(){
@@ -39,7 +39,7 @@ while true
 do
 	getInfo
 
-	if [[ $LastMessageTEXT =~ (/teste(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
+	if [[ $LastMessageTEXT =~ ^(/teste(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
 		replyMessage "isso é um teste, noob" $MessageID $ChatID
@@ -51,7 +51,7 @@ do
 		replyMessage "Coloca um [username](tg://user?id=372539286) ai, noob" $MessageID $ChatID
 	fi
 
-	if [[ $LastMessageTEXT =~ ^(s/) && $LastMessageID != $MessageID && $LastReplyID != null ]]
+	if [[ $LastMessageTEXT =~ ^((user-sed[[:space:]])?s/) && $LastMessageID != $MessageID && $LastReplyID != null ]]
 	then
 		MessageID=$LastMessageID
 
@@ -59,7 +59,8 @@ do
 		second=$(echo $LastMessageTEXT | awk -F"/" '{print $3}')
 		third=$(echo $LastMessageTEXT | awk -F"/" '{print $4}')
 
-		sedText=$(echo $LastReplyTEXT | sed "s/${first}/${second}/${third}")
+		sedText="*Output Message:*\n"
+		sedText+=$(echo $LastReplyTEXT | sed -E "s/${first}/${second}/${third}")
 
 		replyMessage "$sedText" $LastReplyID $ChatID
 	fi
