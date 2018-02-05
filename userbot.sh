@@ -55,12 +55,8 @@ do
 	then
 		MessageID=$LastMessageID
 
-		first=$(echo $LastMessageTEXT | awk -F"/" '{print $2}')
-		second=$(echo $LastMessageTEXT | awk -F"/" '{print $3}')
-		third=$(echo $LastMessageTEXT | awk -F"/" '{print $4}')
-
 		sedText="*Output Message:*\n"
-		sedText+=$(echo $LastReplyTEXT | sed -E "s/${first}/${second}/${third}")
+		sedText+=$(echo $LastReplyTEXT | sed -E "${LastMessageTEXT#user-sed[[:space:]]}")
 
 		replyMessage "$sedText" $LastReplyID $ChatID
 	fi
