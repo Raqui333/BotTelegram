@@ -29,6 +29,9 @@ getInfo(){
 	LastMessageID=$(echo $Update | jq -r '.result[-1].message.message_id')
 	LastMessageUSERNAME=$(echo $Update | jq -r '.result[-1].message.from.username')
 	
+	LastReplyTEXT=$(echo $Update | jq -r '.result[-1].message.reply_to_message.text')
+	LastReplyID=$(echo $Update | jq -r '.result[-1].message.reply_to_message.message_id')
+
 	ChatID=$(echo $Update | jq -r '.result[-1].message.chat.id')
 }
 
@@ -46,6 +49,19 @@ do
 	then
 		MessageID=$LastMessageID
 		replyMessage "Coloca um [username](tg://user?id=372539286) ai, noob" $MessageID $ChatID
+	fi
+
+	if [[ $LastMessageTEXT =~ ^(s/) && $LastMessageID != $MessageID && $LastReplyID != null ]]
+	then
+		MessageID=$LastMessageID
+
+		first=$(echo $LastMessageTEXT | awk -F"/" '{print $2}')
+		second=$(echo $LastMessageTEXT | awk -F"/" '{print $3}')
+		third=$(echo $LastMessageTEXT | awk -F"/" '{print $4}')
+
+		sedText=$(echo $LastReplyTEXT | sed "s/${first}/${second}/${third}")
+
+		replyMessage "$sedText" $LastReplyID $ChatID
 	fi
 
 	sleep 1
