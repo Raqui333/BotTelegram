@@ -15,11 +15,19 @@ getUpdate(){
 }
 
 sendMessage(){
-	curl -s "${BOT}/sendMessage?chat_id=$3&parse_mode=Markdown" --data-urlencode "text=$(echo -e $1)" &> /dev/null
+	curl -s "${BOT}/sendMessage?chat_id=$2&parse_mode=Markdown" --data-urlencode "text=$(echo -e $1)" &> /dev/null
 }
 
 replyMessage(){
 	curl -s "${BOT}/sendMessage?chat_id=$3&reply_to_message_id=$2&parse_mode=Markdown" --data-urlencode "text=$(echo -e $1)" &> /dev/null
+}
+
+sendSticker(){
+	curl -s "${BOT}/sendSticker?chat_id=$2&sticker=$1" &> /dev/null
+}
+
+replySticker(){
+	curl -s "${BOT}/sendSticker?chat_id=$3&sticker=$1&reply_to_message_id=$2" &> /dev/null
 }
 
 getInfo(){
@@ -31,6 +39,8 @@ getInfo(){
 	
 	LastReplyTEXT=$(echo $Update | jq -r '.result[-1].message.reply_to_message.text')
 	LastReplyID=$(echo $Update | jq -r '.result[-1].message.reply_to_message.message_id')
+
+	LastStickerID=$(echo $Update | jq -r '.result[-1].message.sticker.file_id')
 
 	ChatID=$(echo $Update | jq -r '.result[-1].message.chat.id')
 }
@@ -51,14 +61,16 @@ do
 		replyMessage "Coloca um [username](tg://user?id=372539286) ai, noob" $MessageID $ChatID
 	fi
 
-	if [[ $LastMessageTEXT =~ ^((user-sed[[:space:]])?s/) && $LastMessageID != $MessageID && $LastReplyID != null ]]
+	if [[ $LastStickerID = "CAADAQADBwADKeRxF1CaebLREEjlAg" && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
+		replySticker "CAADAQADfgQAAoH5Rg4NggvvuKeZYwI" $MessageID $ChatID
+	fi
 
-		sedText="*Output Message:*\n"
-		sedText+=$(echo $LastReplyTEXT | sed -E "${LastMessageTEXT#user-sed[[:space:]]}")
-
-		replyMessage "$sedText" $LastReplyID $ChatID
+		if [[ $LastMessageTEXT =~ (@Raqui333Bot) && $LastMessageID != $MessageID ]]
+	then
+		MessageID=$LastMessageID
+		replyMessage "que tem eu carai? vai se fuder" $MessageID $ChatID
 	fi
 
 	sleep 1
