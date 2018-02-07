@@ -17,10 +17,14 @@ getUpdate(){
 getInfo(){
 	Update=$(getUpdate)
 
+	ChatType=$(echo $Update | jq -r '.result[-1].message.chat.type')
+
 	LastMessageTEXT=$(echo $Update | jq -r '.result[-1].message.text')
 	LastMessageID=$(echo $Update | jq -r '.result[-1].message.message_id')
 	LastMessageUSERNAME=$(echo $Update | jq -r '.result[-1].message.from.username')
-	
+	LastMessageFNAME=$(echo $Update | jq -r '.result[-1].message.from.first_name')
+	LastMessageLNAME=$(echo $Update | jq -r '.result[-1].message.from.last_name')
+
 	LastReplyTEXT=$(echo $Update | jq -r '.result[-1].message.reply_to_message.text')
 	LastReplyID=$(echo $Update | jq -r '.result[-1].message.reply_to_message.message_id')
 
@@ -51,7 +55,7 @@ send(){
 				## Message
 				## Usage: send --msg <msg text> <chat id>
 
-				curl -s "${BOT}/sendMessage?chat_id=${4}&parse_mode=Markdown" --data-urlencode "text=$(echo -e ${3})" 1> /dev/null
+				curl -s "${BOT}/sendMessage?chat_id=${3}&parse_mode=Markdown" --data-urlencode "text=$(echo -e ${2})" 1> /dev/null
 			fi
 			;;
 		--stk)
@@ -68,7 +72,7 @@ send(){
 				## Sticker
 				## Usage: send --stk <sticker id> <chat id>
 
-				curl -s "${BOT}/sendSticker?chat_id=${4}&sticker=${3}" 1> /dev/null
+				curl -s "${BOT}/sendSticker?chat_id=${3}&sticker=${2}" 1> /dev/null
 			fi
 			;;
 	esac
@@ -95,11 +99,23 @@ do
 
 	## Bot Options
 
+	## /start
+	if [[ $LastMessageTEXT =~ ^(/start(@Raqui333Bot)?) && $ChatType = "private" && $LastMessageID != $MessageID ]]
+	then
+		MessageID=$LastMessageID
+
+		MSG="*Olá*, _${LastMessageFNAME} ${LastMessageLNAME#null}_, @${LastMessageUSERNAME}\n"
+		MSG+="esse bot foi feio em \`Shell Script\` por @Raqui333\n"
+		MSG+="para saber mais fale com ele no PV"
+
+		send --msg "$MSG" $ChatID
+	fi
+
 	## /teste
 	if [[ $LastMessageTEXT =~ ^(/teste(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
-		send --msg "isso é um teste, noob" $MessageID $ChatID
+		send --msg "isso é um teste, noob" $ChatID
 	fi
 	
 	## /repo
