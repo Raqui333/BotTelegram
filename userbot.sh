@@ -30,7 +30,10 @@ getInfo(){
 
 	LastStickerID=$(echo $Update | jq -r '.result[-1].message.sticker.file_id')
 
-	ChatID=$(echo $Update | jq -r '.result[-1].message.chat.id')
+	LastCallBackDATA=$(echo $Update | jq -r '.result[-1].callback_query.data')
+	LastCallBackID=$(echo $Update | jq -r '.result[-1].callback_query.message.message_id')
+
+	ChatID=$(echo $Update | jq -r '.result[-1] | if .message.chat.id == null then .callback_query.message.chat.id else .message.chat.id end')
 }
 
 send(){
@@ -44,18 +47,19 @@ send(){
 				## Message with --reply
 				## Usage: send --msg --reply <msg text> <reply id> <chat id>
 
-				curl -s "${BOT}/sendMessage?chat_id=${5}&parse_mode=Markdown&reply_to_message=${4}" --data-urlencode "text=$(echo -e ${3})" 1> /dev/null
+				curl -s "${BOT}/sendMessage?chat_id=${5}&parse_mode=Markdown&disable_web_page_preview=true&reply_to_message=${4}" --data-urlencode "text=$(echo -e ${3})" 1> /dev/null
 			elif [[ "${2}" = "--button" ]]
 			then
 				## Message with --button
 				## Usage: send --msg --button <msg text> <button> <chat id> 
 				
-				curl -s "${BOT}/sendMessage?chat_id=${5}&parse_mode=Markdown" --data-urlencode "text=$(echo -e ${3})" --data-urlencode "reply_markup={\"inline_keyboard\":${4}}" 1> /dev/null
+				curl -s "${BOT}/sendMessage?chat_id=${5}&parse_mode=Markdown&disable_web_page_preview=true" \
+					--data-urlencode "text=$(echo -e ${3})" --data-urlencode "reply_markup={\"inline_keyboard\":${4}}" 1> /dev/null
 			else
 				## Message
 				## Usage: send --msg <msg text> <chat id>
 
-				curl -s "${BOT}/sendMessage?chat_id=${3}&parse_mode=Markdown" --data-urlencode "text=$(echo -e ${2})" 1> /dev/null
+				curl -s "${BOT}/sendMessage?chat_id=${3}&parse_mode=Markdown&disable_web_page_preview=true" --data-urlencode "text=$(echo -e ${2})" 1> /dev/null
 			fi
 			;;
 		--stk)
@@ -78,6 +82,28 @@ send(){
 	esac
 }
 
+edit(){
+	case $1 in
+		--msg)
+			## editMessage
+			## Usage: edit --msg <option> or null (see Text)
+
+			if [[ "${2}" = "--button" ]]
+			then
+				## ReplyMarkup
+				## Usage: edit --msg --button <new button> <msg id> <chat id>
+
+				curl -s "${BOT}/editMessageReplyMarkup?chat_id=${5}&message_id=${4}" --data-urlencode "reply_markup={\"inline_keyboard\":${3}}" 1> /dev/null
+			else
+				## Text
+				## Usage: edit --msg <new msg text> <msg id> <chat id>
+	
+				curl -s "${BOT}/editMessageText?chat_id${4}&parse_mode=Markdown&&disable_web_page_preview=true&message_id=${3}" --data-urlencode "text=$(echo -e ${2})"
+			fi
+			;;
+	esac
+}
+
 ########################################################################################################################
 ##                                                                                                                    ##
 ## How to create a button                                                                                             ##
@@ -89,8 +115,16 @@ send(){
 ##                                                                                                                    ##
 ########################################################################################################################
 
-## Example
-repoButton='[[{"text":"CLICK HERE","url":"https://t.me/RepoMatrix"}]]'
+## Buttons
+repoButton='[[{"text":"CLICK HERE","url":"t.me/RepoMatrix"},
+              {"text":"ADMs","callback_data":"ADMs"}]]'
+
+admsButton='[[{"text":"UDglad Dahaka","url":"t.me/Raqui333"},
+              {"text":"CMwise","url":"t.me/CMAngel"},
+              {"text":"Anaboth Hekmatyar","url":"t.me/Anaboth"}]]'
+
+sourceButton='[[{"text":"Source Code","url":"https://github.com/UserUnavailable/ShellBot/blob/master/userbot.sh"},
+                {"text":"GitHub","url":"https://github.com/UserUnavailable/ShellBot"}]]'
 
 while true
 do
@@ -108,28 +142,29 @@ do
 		MSG+="esse bot foi feio em \`Shell Script\` por @Raqui333\n"
 		MSG+="para saber mais fale com ele no PV"
 
-		send --msg "$MSG" $ChatID
-	fi
-
-	## /teste
-	if [[ $LastMessageTEXT =~ ^(/teste(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
-	then
-		MessageID=$LastMessageID
-		send --msg "isso é um teste, noob" $ChatID
+		send --msg --button "$MSG" "$sourceButton" $ChatID
 	fi
 	
 	## /repo
 	if [[ $LastMessageTEXT =~ ^(/repo(@Raqui333Bot)?) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
-		send --msg --button "Matrix Repository" "$repoButton" $ChatID
+		
+		MSG="*Matrix Repository*\n\n"
+		MSG+="Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
+
+		send --msg --button "$MSG" "$repoButton" $ChatID
+	elif [[ $LastCallBackDATA = "ADMs" && $LastMessageID != $MessageID ]]
+	then
+		MessageID=$LastMessageID
+		edit --msg --button "$admsButton" $LastCallBackID $ChatID
 	fi
 
 	## Others
 	if [[ $LastMessageUSERNAME = "null"  && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
-		send --msg --reply "Coloca um [username](tg://user?id=372539286) ai, noob" $MessageID $ChatID
+		send --msg --reply "Coloque um [username](t.me/Raqui333Bot) por favor" $MessageID $ChatID
 	fi
 
 	if [[ $LastStickerID = "CAADAQADBwADKeRxF1CaebLREEjlAg" && $LastMessageID != $MessageID ]]
@@ -137,7 +172,7 @@ do
 		MessageID=$LastMessageID
 		send --stk --reply "CAADAQADfgQAAoH5Rg4NggvvuKeZYwI" $MessageID $ChatID
 	fi
-
+	
 	if [[ $LastMessageTEXT =~ (@Raqui333Bot) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
