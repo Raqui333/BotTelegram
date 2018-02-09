@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOKEN="<TOKEN>"
+TOKEN="372539286:AAGWhvF-LMYWTCUz-hOBndm7257Cdd28Bbo"
 BOT="https://api.telegram.org/bot${TOKEN}"
 MessageID=0
 
@@ -20,8 +20,8 @@ getInfo(){
 	ChatType=$(echo $Update | jq -r '.result[-1].message.chat.type')
 
 	LastMessageTEXT=$(echo $Update | jq -r '.result[-1].message.text')
-	LastMessageID=$(echo $Update | jq -r '.result[-1].message.message_id')
-	LastMessageUSERNAME=$(echo $Update | jq -r '.result[-1].message.from.username')
+	LastMessageID=$(echo $Update | jq -r '.result[-1] | if .message.message_id == null then .callback_query.message.message_id else .message.message_id end')
+	LastMessageUSERNAME=$(echo $Update | jq -r '.result[-1] | if .message.from.username == null then .callback_query.message.from.username else .message.from.username end')
 	LastMessageFNAME=$(echo $Update | jq -r '.result[-1].message.from.first_name')
 	LastMessageLNAME=$(echo $Update | jq -r '.result[-1].message.from.last_name')
 
@@ -31,7 +31,7 @@ getInfo(){
 	LastStickerID=$(echo $Update | jq -r '.result[-1].message.sticker.file_id')
 
 	LastCallBackDATA=$(echo $Update | jq -r '.result[-1].callback_query.data')
-	LastCallBackID=$(echo $Update | jq -r '.result[-1].callback_query.message.message_id')
+	LastCallBackID=$(echo $Update | jq -r '.result[-1].callback_query.id')
 
 	ChatID=$(echo $Update | jq -r '.result[-1] | if .message.chat.id == null then .callback_query.message.chat.id else .message.chat.id end')
 }
@@ -98,7 +98,7 @@ edit(){
 				## Text
 				## Usage: edit --msg <new msg text> <msg id> <chat id>
 	
-				curl -s "${BOT}/editMessageText?chat_id${4}&parse_mode=Markdown&&disable_web_page_preview=true&message_id=${3}" --data-urlencode "text=$(echo -e ${2})"
+				curl -s "${BOT}/editMessageText?chat_id${4}&parse_mode=Markdown&&disable_web_page_preview=true&message_id=${3}" --data-urlencode "text=$(echo -e ${2})" 1> /dev/null
 			fi
 			;;
 	esac
@@ -121,7 +121,8 @@ repoButton='[[{"text":"CLICK HERE","url":"t.me/RepoMatrix"},
 
 admsButton='[[{"text":"UDglad Dahaka","url":"t.me/Raqui333"},
               {"text":"CMwise","url":"t.me/CMAngel"},
-              {"text":"Anaboth Hekmatyar","url":"t.me/Anaboth"}]]'
+              {"text":"Anaboth Hekmatyar","url":"t.me/Anaboth"}],
+	     [{"text":"BACK","callback_data":"BACK"}]]'
 
 sourceButton='[[{"text":"Source Code","url":"https://github.com/UserUnavailable/ShellBot/blob/master/userbot.sh"},
                 {"text":"GitHub","url":"https://github.com/UserUnavailable/ShellBot"}]]'
@@ -154,10 +155,16 @@ do
 		MSG+="Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
 
 		send --msg --button "$MSG" "$repoButton" $ChatID
-	elif [[ $LastCallBackDATA = "ADMs" && $LastMessageID != $MessageID ]]
+	elif [[ $LastCallBackDATA = "ADMs" && $LastCallBackID != $CallBackID ]]
 	then
 		MessageID=$LastMessageID
-		edit --msg --button "$admsButton" $LastCallBackID $ChatID
+		CallBackID=$LastCallBackID
+		edit --msg --button "$admsButton" $LastMessageID $ChatID
+	elif [[ $LastCallBackDATA = "BACK" && $LastCallBackID != $CallBackID ]]
+	then
+		MessageID=$LastMessageID
+		CallBackID=$LastCallBackID
+		edit --msg --button "$repoButton" $LastMessageID $ChatID
 	fi
 
 	## Others
@@ -172,7 +179,7 @@ do
 		MessageID=$LastMessageID
 		send --stk --reply "CAADAQADfgQAAoH5Rg4NggvvuKeZYwI" $MessageID $ChatID
 	fi
-	
+
 	if [[ $LastMessageTEXT =~ (@Raqui333Bot) && $LastMessageID != $MessageID ]]
 	then
 		MessageID=$LastMessageID
