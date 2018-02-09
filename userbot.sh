@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TOKEN="372539286:AAGWhvF-LMYWTCUz-hOBndm7257Cdd28Bbo"
+TOKEN="<TOKEN>"
 BOT="https://api.telegram.org/bot${TOKEN}"
 MessageID=0
 
