@@ -5,10 +5,12 @@ import json
 import requests
 import time
 
-## Variable default
+## Variables default
 TOKEN = "<TOKEN>"
 BOT = "https://api.telegram.org/bot" + TOKEN
-MessageID = 0
+
+## Variables to not spam
+MessageID, cBackID = 0, 0
 
 def getUpdates():
     command = requests.get(BOT + "/getUpdates")
@@ -51,12 +53,14 @@ class msg:
         requests.post(BOT + "/sendMessage", data=MESSAGE)
 
 class edit:
+    ## editMessage
+    ## Usage: edit.button(chat_id, message_id, reply_markup)
     def button(ChatID, ID, Button):
         BUTTON = '{"inline_keyboard":' + Button + '}'
         MESSAGE = {"chat_id":ChatID,
                    "message_id":ID,
                    "reply_markup":BUTTON}
-        requests.post(BOT + "/sendMessage", data=MESSAGE)
+        requests.post(BOT + "/editMessageReplyMarkup", data=MESSAGE)
 
 def getInfo():
     Update = json.loads(getUpdates())
@@ -68,13 +72,19 @@ def getInfo():
     except KeyError: Type = "None"
     
     try: ChatID = Update["result"][-1]["message"]["chat"]["id"]
-    except KeyError: ChatID = "None"
+    except KeyError: 
+        try: ChatID = Update["result"][-1]["callback_query"]["message"]["chat"]["id"]
+        except KeyError: ChatID = "None"
 
     try: ID = Update["result"][-1]["message"]["message_id"]
-    except KeyError: ID = "None"
+    except KeyError: 
+        try: ID = Update["result"][-1]["callback_query"]["message"]["message_id"]
+        except KeyError: ID = "None"
 
     try: Username = Update["result"][-1]["message"]["from"]["username"]
-    except KeyError: Username = "None"
+    except KeyError:
+        try: Username = Update["result"][-1]["callback_query"]["message"]["from"]["username"]
+        except KeyError: Username = "None"
 
     try: FName = Update["result"][-1]["message"]["from"]["first_name"]
     except KeyError: FName = "None"
@@ -82,16 +92,13 @@ def getInfo():
     try: LName = Update["result"][-1]["message"]["from"]["last_name"]
     except KeyError: LName = "None"
 
-    try: callbackMID = Update["result"][-1]["callback_query"]["message"]["message_id"]
-    except KeyError: callbackMID = "None"
-
     try: callbackID = Update["result"][-1]["callback_query"]["id"]
     except KeyError: callbackID = "None"
 
     try: callbackDATA = Update["result"][-1]["callback_query"]["data"]
     except KeyError: callbackDATA = "None"
 
-    return Text, Type, ChatID, ID, Username, FName, LName, callbackMID, callbackID, callbackDATA
+    return Text, Type, ChatID, ID, Username, FName, LName, callbackID, callbackDATA
 
 ## Buttons
 sourceButton = '[[{"text":"Source Code","url":"https://github.com/UserUnavailable/ShellBot/blob/master/userbot.py"}, \
@@ -107,7 +114,10 @@ admsButton='[[{"text":"UDglad Dahaka","url":"t.me/Raqui333"}, \
 
 
 while True:
-    Text, Type, ChatID, ID, Username, FName, LName, callbackMID, callbackID, callbackDATA = getInfo()
+    ## GetInfo
+    Text, Type, ChatID, ID, Username, FName, LName, callbackID, callbackDATA = getInfo()
+    
+    ## to not spam
     if ID != MessageID:
         if Text == "/teste":
             MessageID = ID
@@ -115,7 +125,7 @@ while True:
 
         if Username == "None":
             MessageID = ID
-            msg.reply(ChatID, "Coloca um [username](t.me/Raqui333Bot) otário", ID)
+            msg.reply(ChatID, "Coloca um [username](t.me/Raqui333Bot) otário", MessageID)
 
         if Text == "/start" and Type == "private":
             MessageID = ID
@@ -125,16 +135,22 @@ while True:
                   "para saber mais fale com ele no PV"
 
             msg.button(ChatID, MSG, sourceButton)
-        
-        ## Fazer DPS
-        """
-        if Text == "/repo":
-            MessageID = ID
+    
+    ## Button Repo
+    if Text == "/repo" and ID != MessageID:
+        MessageID = ID
             
-            MSG
-             
-            msg.button(ChatID, )
-        """
+        MSG = "*Matrix Repository*\n\n" \
+                  "Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
+        msg.button(ChatID, MSG, repoButton)
+    elif callbackDATA == "ADMs" and callbackID != cBackID:
+        cBackID = callbackID
+        MessageID = ID
+        edit.button(ChatID, ID, admsButton)
+    elif callbackDATA == "BACK" and callbackID != cBackID:
+        cBackID = callbackID
+        MessageID = ID
+        edit.button(ChatID, ID, repoButton)
     
     # sleep to not explode
     time.sleep(1)
