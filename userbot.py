@@ -4,6 +4,7 @@
 import json
 import requests
 import time
+import re
 
 ## Variables default
 TOKEN = "<TOKEN>"
@@ -119,15 +120,11 @@ while True:
     
     ## to not spam
     if ID != MessageID:
-        if Text == "/teste":
-            MessageID = ID
-            msg.send(ChatID, "Teste Noob")
-
         if Username == "None":
             MessageID = ID
             msg.reply(ChatID, "Coloca um [username](t.me/Raqui333Bot) otário", MessageID)
 
-        if Text == "/start" and Type == "private":
+        if re.match("(/start(@Raqui333Bot)?)$", Text) and Type == "private":
             MessageID = ID
 
             MSG = "*Olá* _" + FName + " " + LName.replace("None", "") + "_, @" + Username + "\n" \
@@ -137,11 +134,11 @@ while True:
             msg.button(ChatID, MSG, sourceButton)
     
     ## Button Repo
-    if Text == "/repo" and ID != MessageID:
+    if re.match("(/repo(@Raqui333Bot)?)$", Text) and ID != MessageID:
         MessageID = ID
             
         MSG = "*Matrix Repository*\n\n" \
-                  "Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
+              "Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
         msg.button(ChatID, MSG, repoButton)
     elif callbackDATA == "ADMs" and callbackID != cBackID:
         cBackID = callbackID
@@ -151,6 +148,6 @@ while True:
         cBackID = callbackID
         MessageID = ID
         edit.button(ChatID, ID, repoButton)
-    
+
     # sleep to not explode
     time.sleep(1)
