@@ -115,39 +115,43 @@ admsButton='[[{"text":"UDglad Dahaka","url":"t.me/Raqui333"}, \
 
 
 while True:
-    ## GetInfo
-    Text, Type, ChatID, ID, Username, FName, LName, callbackID, callbackDATA = getInfo()
+    ## try for network lost
+    try:
+        ## GetInfo
+        Text, Type, ChatID, ID, Username, FName, LName, callbackID, callbackDATA = getInfo()
     
-    ## to not spam
-    if ID != MessageID:
-        if Username == "None":
-            MessageID = ID
-            msg.reply(ChatID, "Coloca um [username](t.me/Raqui333Bot) otário", MessageID)
+        ## to not spam
+        if ID != MessageID:
+            if Username == "None":
+                MessageID = ID
+                msg.reply(ChatID, "Coloca um [username](t.me/Raqui333Bot) otário", MessageID)
 
-        if re.match("(/start(@Raqui333Bot)?)$", Text) and Type == "private":
-            MessageID = ID
+            if re.match("(/start(@Raqui333Bot)?)$", Text) and Type == "private":
+                MessageID = ID
 
-            MSG = "*Olá* _" + FName + " " + LName.replace("None", "") + "_, @" + Username + "\n" \
-                  "esse bot foi feito em `Python` por @Raqui333" + "\n" \
-                  "para saber mais fale com ele no PV"
+                MSG = "*Olá* _" + FName + " " + LName.replace("None", "") + "_, @" + Username + "\n" \
+                      "esse bot foi feito em `Python` por @Raqui333" + "\n" \
+                    "para saber mais fale com ele no PV"
 
-            msg.button(ChatID, MSG, sourceButton)
+                msg.button(ChatID, MSG, sourceButton)
     
-    ## Button Repo
-    if re.match("(/repo(@Raqui333Bot)?)$", Text) and ID != MessageID:
-        MessageID = ID
+        ## Button Repo
+        if re.match("(/repo(@Raqui333Bot)?)$", Text) and ID != MessageID:
+            MessageID = ID
             
-        MSG = "*Matrix Repository*\n\n" \
-              "Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
-        msg.button(ChatID, MSG, repoButton)
-    elif callbackDATA == "ADMs" and callbackID != cBackID:
-        cBackID = callbackID
-        MessageID = ID
-        edit.button(ChatID, ID, admsButton)
-    elif callbackDATA == "BACK" and callbackID != cBackID:
-        cBackID = callbackID
-        MessageID = ID
-        edit.button(ChatID, ID, repoButton)
+            MSG = "*Matrix Repository*\n\n" \
+                  "Canal do grupo [Matrix](t.me/BemVindoAMatrixv2) com alguns tutoriais sobre linux"
+            msg.button(ChatID, MSG, repoButton)
+        elif callbackDATA == "ADMs" and callbackID != cBackID:
+            cBackID = callbackID
+            MessageID = ID
+            edit.button(ChatID, ID, admsButton)
+        elif callbackDATA == "BACK" and callbackID != cBackID:
+            cBackID = callbackID
+            MessageID = ID
+            edit.button(ChatID, ID, repoButton)
+    except requests.exceptions.ConnectionError:
+        pass
 
     # sleep to not explode
     time.sleep(1)
