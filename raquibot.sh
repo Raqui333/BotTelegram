@@ -1,22 +1,21 @@
 #!/bin/bash
 
-TOKEN="<TOKEN>"
+TOKEN="TOKEN"
 BOT="https://api.telegram.org/bot${TOKEN}"
 
-declare -g DATA5
-declare -g ONLY="default"
+declare -g DATA
+declare -g ONLY
 
 function get_updates() {
-	if [[ $(curl -s "${BOT}/getUpdates" | wc -l) -eq 100 ]]
-	then
-		OFFSET=$(curl -s "${BOT}/getUpdates" | jq -r '.result[-1].update_id')
-		curl -s "${BOT}/getUpdates?offset=$(($OFFSET + 1))"
+	DATA=$(curl -s -X GET ${BOT}/getUpdates)
+	if [[ $(wc -l <<< ${DATA}) -eq 100 ]]; then
+		OFFSET=$(jq -r '.result[-1].update_id' <<< ${DATA})
+		curl -s -d "offset=$(($OFFSET + 1))" -X POST ${BOT}/getUpdates -o /dev/null
 	fi
-	DATA=$(curl -s "${BOT}/getUpdates")
 }
 
 function send_msg() {
-	curl -s "${BOT}/sendMessage?chat_id=${1}&text=${2}"
+	curl -s -d "chat_id=${1}&text=${2}" -X POST ${BOT}/sendMessage -o /dev/null
 	ONLY=$(jq -r '.result[-1].message.message_id' <<< ${DATA})
 }
 
@@ -31,7 +30,11 @@ while :; do
 	if [[ $ID != $ONLY ]]
 	then
 		## /base64 command
-		[[ ${MSG} =~ ^/base64(@Raqui333bot)? ]] && send_msg ${CHAT} $(sed -E 's:^/base64(@Raqui333bot)?\s::' <<< ${MSG} | base64)
+		if [[ ${MSG} =~ ^/base64(@Raqui333bot)? ]]
+		then
+			MSG=$(sed -E 's:^/base64(@Raqui333bot)?\s::' <<< ${MSG} | tr -d '\n' | base64)
+			send_msg ${CHAT} ${MSG}
+		fi
 	fi
 
 	sleep 0.5
